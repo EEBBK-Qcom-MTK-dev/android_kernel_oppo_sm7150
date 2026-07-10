@@ -168,6 +168,7 @@ int ubootback_thread_fn(void)
 	size_t line_len = 0;
 	u32 idx =0;
 	u64 seq =0;
+	(void)data;
 
 	kboot_dumper.active = true;
 	while (kboot_log_buf_len > total_size + 2*LINE_MAX_SIZE)
