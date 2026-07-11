@@ -76,9 +76,16 @@ jobs:
               exit 1
           fi
 
-      - name: Upload kernel file
+      - name: Upload Image file
         if: env.CHECK_FILE_IS_OK == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-4.14
+          name: Image-gz-4.14
           path: workdir/source/out/arch/arm64/boot/Image.gz
+
+            - name: Upload kernel file
+        if: env.CHECK_FILE_IS_OK == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Image-gz-dtb-4.14
+          path: workdir/source/out/arch/arm64/boot/Image.gz-dtb
