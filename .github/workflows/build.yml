@@ -83,7 +83,7 @@ jobs:
           name: Image-gz-4.14
           path: workdir/source/out/arch/arm64/boot/Image.gz
 
-            - name: Upload kernel file
+      - name: Upload kernel file
         if: env.CHECK_FILE_IS_OK == 'true'
         uses: actions/upload-artifact@v4
         with:
