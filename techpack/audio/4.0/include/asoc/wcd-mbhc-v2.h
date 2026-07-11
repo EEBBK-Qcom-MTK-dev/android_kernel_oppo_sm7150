@@ -123,18 +123,14 @@ do {                                                    \
 
 #define WCD_MBHC_JACK_MASK (SND_JACK_HEADSET | SND_JACK_OC_HPHL | \
 			   SND_JACK_OC_HPHR | SND_JACK_LINEOUT | \
-			   SND_JACK_MECHANICAL | SND_JACK_MICROPHONE2 | \
+			   SND_JACK_MECHANICAL | \
 			   SND_JACK_UNSUPPORTED)
 
 #define WCD_MBHC_JACK_BUTTON_MASK (SND_JACK_BTN_0 | SND_JACK_BTN_1 | \
 				  SND_JACK_BTN_2 | SND_JACK_BTN_3 | \
 				  SND_JACK_BTN_4 | SND_JACK_BTN_5)
 #define OCP_ATTEMPT 20
-#ifndef OPLUS_ARCH_EXTENDS
 #define HS_DETECT_PLUG_TIME_MS (3 * 1000)
-#else /* OPLUS_ARCH_EXTENDS */
-#define HS_DETECT_PLUG_TIME_MS (5 * 1000)
-#endif /* OPLUS_ARCH_EXTENDS */
 #define SPECIAL_HS_DETECT_TIME_MS (2 * 1000)
 #define MBHC_BUTTON_PRESS_THRESHOLD_MIN 250
 #define GND_MIC_SWAP_THRESHOLD 4
@@ -597,13 +593,6 @@ struct wcd_mbhc {
 	bool force_linein;
 	struct device_node *fsa_np;
 	struct notifier_block fsa_nb;
-
-	#ifdef OPLUS_ARCH_EXTENDS
-	bool need_cross_conn;
-	#endif /* OPLUS_ARCH_EXTENDS */
-	#ifdef OPLUS_ARCH_EXTENDS
-	struct delayed_work hp_detect_work;
-	#endif /* OPLUS_ARCH_EXTENDS */
 };
 
 void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,

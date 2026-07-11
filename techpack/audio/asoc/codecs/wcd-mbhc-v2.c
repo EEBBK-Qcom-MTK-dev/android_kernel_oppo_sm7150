@@ -34,19 +34,6 @@
 #include "wcd-mbhc-adc.h"
 #include "wcd-mbhc-v2-api.h"
 
-#ifdef OPLUS_ARCH_EXTENDS
-#ifdef pr_debug
-#undef pr_debug
-#define pr_debug pr_warning
-#endif
-
-#ifdef dev_dbg
-#undef dev_dbg
-#define dev_dbg dev_err
-#endif
-#endif /*OPLUS_ARCH_EXTENDS*/
-
-
 void wcd_mbhc_jack_report(struct wcd_mbhc *mbhc,
 			  struct snd_soc_jack *jack, int status, int mask)
 {
@@ -542,11 +529,6 @@ void wcd_mbhc_hs_elec_irq(struct wcd_mbhc *mbhc, int irq_type,
 
 	WCD_MBHC_RSC_ASSERT_LOCKED(mbhc);
 
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: enter irq_type: %d, enable: %d\n",
-		__func__, irq_type, enable);
-	#endif /* OPLUS_ARCH_EXTENDS */
-
 	if (irq_type == WCD_MBHC_ELEC_HS_INS)
 		irq = mbhc->intr_ids->mbhc_hs_ins_intr;
 	else if (irq_type == WCD_MBHC_ELEC_HS_REM)
@@ -675,7 +657,6 @@ void wcd_mbhc_report_plug(struct wcd_mbhc *mbhc, int insertion,
 			}
 			mbhc->hph_status &= ~(SND_JACK_HEADSET |
 						SND_JACK_LINEOUT |
-						SND_JACK_ANC_HEADPHONE |
 						SND_JACK_UNSUPPORTED);
 		}
 
@@ -693,8 +674,9 @@ void wcd_mbhc_report_plug(struct wcd_mbhc *mbhc, int insertion,
 			mbhc->jiffies_atreport = jiffies;
 		} else if (jack_type == SND_JACK_LINEOUT) {
 			mbhc->current_plug = MBHC_PLUG_TYPE_HIGH_HPH;
-		} else if (jack_type == SND_JACK_ANC_HEADPHONE)
-			mbhc->current_plug = MBHC_PLUG_TYPE_ANC_HEADPHONE;
+		} else {
+			pr_debug("%s: invalid Jack type %d\n",__func__, jack_type);
+		}
 
 		if (mbhc->mbhc_cb->hph_pa_on_status)
 			is_pa_on = mbhc->mbhc_cb->hph_pa_on_status(codec);
@@ -769,10 +751,6 @@ EXPORT_SYMBOL(wcd_mbhc_report_plug);
 
 void wcd_mbhc_elec_hs_report_unplug(struct wcd_mbhc *mbhc)
 {
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: enter\n", __func__);
-	#endif /* OPLUS_ARCH_EXTENDS */
-
 	/* cancel pending button press */
 	if (wcd_cancel_btn_work(mbhc))
 		pr_debug("%s: button press is canceled\n", __func__);
@@ -849,8 +827,6 @@ void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,
 			anc_mic_found =
 			mbhc->mbhc_fn->wcd_mbhc_detect_anc_plug_type(mbhc);
 		jack_type = SND_JACK_HEADSET;
-		if (anc_mic_found)
-			jack_type = SND_JACK_ANC_HEADPHONE;
 
 		/*
 		 * If Headphone was reported previously, this will
@@ -916,9 +892,6 @@ static bool wcd_mbhc_moisture_detect(struct wcd_mbhc *mbhc, bool detection_type)
 		mbhc->mbhc_cb->mbhc_moisture_polling_ctrl(mbhc, false);
 		mbhc->mbhc_cb->mbhc_moisture_detect_en(mbhc, false);
 	}
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: leave\n", __func__);
-	#endif /* OPLUS_ARCH_EXTENDS */
 
 	return ret;
 }
@@ -1030,9 +1003,6 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 			mbhc->is_extn_cable = false;
 			jack_type = SND_JACK_LINEOUT;
 			break;
-		case MBHC_PLUG_TYPE_ANC_HEADPHONE:
-			jack_type = SND_JACK_ANC_HEADPHONE;
-			break;
 		default:
 			pr_info("%s: Invalid current plug: %d\n",
 				__func__, mbhc->current_plug);
@@ -1108,10 +1078,6 @@ int wcd_mbhc_get_button_mask(struct wcd_mbhc *mbhc)
 
 	btn = mbhc->mbhc_cb->map_btn_code_to_num(mbhc->codec);
 
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: btn is %d", __func__, btn);
-	#endif /* OPLUS_ARCH_EXTENDS */
-
 	switch (btn) {
 	case 0:
 		mask = SND_JACK_BTN_0;
@@ -1144,11 +1110,6 @@ static void wcd_btn_lpress_fn(struct work_struct *work)
 	struct delayed_work *dwork;
 	struct wcd_mbhc *mbhc;
 	s16 btn_result = 0;
-
-#ifdef OPLUS_ARCH_EXTENDS
-#undef pr_debug
-#define pr_debug pr_info
-#endif /* OPLUS_ARCH_EXTENDS */
 
 	pr_debug("%s: Enter\n", __func__);
 

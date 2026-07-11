@@ -30,22 +30,7 @@
 #include "wcd-mbhc-adc.h"
 #include "wcd-mbhc-v2.h"
 #include "pdata.h"
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
-#include <soc/oplus/system/oplus_mm_kevent_fb.h>
-#endif
 
-#ifdef OPLUS_ARCH_EXTENDS
-#ifdef pr_debug
-#undef pr_debug
-#define pr_debug pr_warning
-#endif
-
-#ifdef dev_dbg
-#undef dev_dbg
-#define dev_dbg dev_err
-#endif
-
-#endif /*OPLUS_ARCH_EXTENDS*/
 #define WCD_MBHC_ADC_HS_THRESHOLD_MV    1700
 #define WCD_MBHC_ADC_HPH_THRESHOLD_MV   75
 #define WCD_MBHC_ADC_MICBIAS_MV         1800
@@ -201,10 +186,6 @@ static bool wcd_mbhc_adc_detect_anc_plug_type(struct wcd_mbhc *mbhc)
 	u8 vref = 0;
 	int vref_mv[] = {1650, 1500, 1600, 1700};
 
-
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: enter\n", __func__);
-	#endif /* OPLUS_ARCH_EXTENDS */
 	if (mbhc->mbhc_cfg->anc_micbias < MIC_BIAS_1 ||
 	    mbhc->mbhc_cfg->anc_micbias > MIC_BIAS_4)
 		return false;
@@ -492,11 +473,7 @@ static bool wcd_is_special_headset(struct wcd_mbhc *mbhc)
 		/* Wait for 50ms for FSM to update result */
 		msleep(50);
 		output_mv = wcd_measure_adc_once(mbhc, MUX_CTL_IN2P);
-		#ifndef OPLUS_ARCH_EXTENDS
 		if (output_mv <= adc_threshold) {
-		#else /* OPLUS_ARCH_EXTENDS */
-		if ((output_mv >= 0) && (output_mv <= adc_threshold)) {
-		#endif /* OPLUS_ARCH_EXTENDS */
 			pr_debug("%s: Special headset detected in %d msecs\n",
 					__func__, delay);
 			is_spl_hs = true;
@@ -577,11 +554,7 @@ static void wcd_mbhc_adc_detect_plug_type(struct wcd_mbhc *mbhc)
 {
 	struct snd_soc_codec *codec = mbhc->codec;
 
-
 	pr_debug("%s: enter\n", __func__);
-	#ifdef OPLUS_ARCH_EXTENDS
-	msleep(400);
-	#endif /* OPLUS_ARCH_EXTENDS */	
 	WCD_MBHC_RSC_ASSERT_LOCKED(mbhc);
 
 	if (mbhc->mbhc_cb->hph_pull_down_ctrl)
@@ -606,15 +579,8 @@ static void wcd_mbhc_adc_detect_plug_type(struct wcd_mbhc *mbhc)
 static void wcd_micbias_disable(struct wcd_mbhc *mbhc)
 {
 	if (mbhc->micbias_enable) {
-		#ifndef OPLUS_ARCH_EXTENDS
 		mbhc->mbhc_cb->mbhc_micb_ctrl_thr_mic(
 			mbhc->codec, MIC_BIAS_2, false);
-		#else /* OPLUS_ARCH_EXTENDS */
-		if (mbhc->mbhc_cb->mbhc_micb_ctrl_thr_mic) {
-			mbhc->mbhc_cb->mbhc_micb_ctrl_thr_mic(
-				mbhc->codec, MIC_BIAS_2, false);
-		}
-		#endif /* OPLUS_ARCH_EXTENDS */
 		if (mbhc->mbhc_cb->set_micbias_value)
 			mbhc->mbhc_cb->set_micbias_value(
 					mbhc->codec);
@@ -627,13 +593,6 @@ static int wcd_mbhc_get_plug_from_adc(struct wcd_mbhc *mbhc, int adc_result)
 {
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_INVALID;
 	u32 hph_thr = 0, hs_thr = 0;
-
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: adc_result %d mv\n", __func__, adc_result);
-	if (adc_result < 0) {
-		return plug_type;
-	}
-	#endif /* OPLUS_ARCH_EXTENDS */
 
 	hs_thr = wcd_mbhc_adc_get_hs_thres(mbhc);
 	hph_thr = wcd_mbhc_adc_get_hph_thres(mbhc);
@@ -649,13 +608,6 @@ static int wcd_mbhc_get_plug_from_adc(struct wcd_mbhc *mbhc, int adc_result)
 	return plug_type;
 }
 
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
-#define OPLUS_AUDIO_EVENTID_HEADSET_DET   (10009)
-#define OPLUS_FB_HEADSET_DET_RATELIMIT    (60*1000)
-int upload_mm_fb_kevent_to_atlas_limit(unsigned int event_id, unsigned char *payload, int limit_ms);
-static int (*upload_mm_fb_func)(unsigned int event_id, unsigned char *payload, int limit_ms);
-#endif
-
 static void wcd_correct_swch_plug(struct work_struct *work)
 {
 	struct wcd_mbhc *mbhc;
@@ -663,24 +615,16 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_INVALID;
 	unsigned long timeout;
 	bool wrk_complete = false;
-	#ifndef OPLUS_ARCH_EXTENDS
 	int pt_gnd_mic_swap_cnt = 0;
 	int no_gnd_mic_swap_cnt = 0;
-	#endif
 	bool is_pa_on = false, spl_hs = false, spl_hs_reported = false;
-	#ifndef OPLUS_ARCH_EXTENDS
 	int ret = 0;
-	#endif
 	int spl_hs_count = 0;
 	int output_mv = 0;
 	int cross_conn;
 	int try = 0;
-	int hs_threshold, micbias_mv, hph_threshold;
+	int hs_threshold, micbias_mv;
 
-	#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
-	int retry = 0;
-	char buf[MM_KEVENT_MAX_PAYLOAD_SIZE] = {0};
-	#endif
 	pr_debug("%s: enter\n", __func__);
 
 	mbhc = container_of(work, struct wcd_mbhc, correct_plug_swch);
@@ -688,11 +632,6 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 
 	micbias_mv = wcd_mbhc_get_micbias(mbhc);
 	hs_threshold = wcd_mbhc_adc_get_hs_thres(mbhc);
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: hs_threshold %d mv\n", __func__, hs_threshold);
-	hph_threshold = wcd_mbhc_adc_get_hph_thres(mbhc);
-	pr_info("%s: hph_threshold %d mv\n", __func__, hph_threshold);
-	#endif /* OPLUS_ARCH_EXTENDS */
 
 	WCD_MBHC_RSC_LOCK(mbhc);
 	/* Mask ADC COMPLETE interrupt */
@@ -782,7 +721,6 @@ correct_plug_type:
 		    (spl_hs_count < WCD_MBHC_SPL_HS_CNT)) {
 			spl_hs = wcd_mbhc_adc_check_for_spl_headset(mbhc,
 								&spl_hs_count);
-
 			output_mv = wcd_measure_adc_once(mbhc, MUX_CTL_IN2P);
 
 			if (spl_hs_count == WCD_MBHC_SPL_HS_CNT) {
@@ -793,15 +731,9 @@ correct_plug_type:
 			}
 		}
 
-
 		if (mbhc->mbhc_cb->hph_pa_on_status)
 			is_pa_on = mbhc->mbhc_cb->hph_pa_on_status(mbhc->codec);
 
-		#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
-		retry++;
-		#endif /* OPLUS_FEATURE_MM_FEEDBACK */
-
-		#ifndef OPLUS_ARCH_EXTENDS
 		if ((output_mv <= hs_threshold) &&
 		    (!is_pa_on)) {
 			/* Check for cross connection*/
@@ -855,7 +787,6 @@ correct_plug_type:
 				}
 			}
 		}
-		#endif/*OPLUS_ARCH_EXTENDS*/
 
 		if (output_mv > hs_threshold) {
 			pr_debug("%s: cable is extension cable\n", __func__);
@@ -882,9 +813,6 @@ correct_plug_type:
 				 * and if there is not button press without
 				 * release
 				 */
-				#ifdef OPLUS_ARCH_EXTENDS
-				pr_info("%s: loop current_plug %d\n", __func__, mbhc->current_plug);
-				#endif /* OPLUS_ARCH_EXTENDS */
 				if ((mbhc->current_plug !=
 				      MBHC_PLUG_TYPE_HEADSET) &&
 				     (mbhc->current_plug !=
@@ -962,10 +890,6 @@ enable_supply:
 	if (mbhc->mbhc_cb->mbhc_micbias_control)
 		wcd_mbhc_adc_update_fsm_source(mbhc, plug_type);
 exit:
-	#ifdef OPLUS_ARCH_EXTENDS
-	pr_info("%s: mbhc exit plug_type %d, micbias_enable %d\n",
-		__func__, plug_type, mbhc->micbias_enable);
-	#endif /* OPLUS_ARCH_EXTENDS */
 	if (mbhc->mbhc_cb->mbhc_micbias_control &&
 	    !mbhc->micbias_enable)
 		mbhc->mbhc_cb->mbhc_micbias_control(codec, MIC_BIAS_2,
@@ -1018,17 +942,6 @@ exit:
 		mbhc->mbhc_cb->hph_pull_down_ctrl(codec, true);
 
 	mbhc->mbhc_cb->lock_sleep(mbhc, false);
-	#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
-	if ((plug_type != MBHC_PLUG_TYPE_HEADSET) &&
-	    (plug_type != MBHC_PLUG_TYPE_HEADPHONE)) {
-		upload_mm_fb_func = symbol_request(upload_mm_fb_kevent_to_atlas_limit);
-		if (upload_mm_fb_func) {
-			scnprintf(buf, sizeof(buf) - 1, "func@@%s$$plug_type@@%d$$output_mv@@%d$$retry@@%d",
-				__func__, plug_type, output_mv, retry);
-			upload_mm_fb_func(OPLUS_AUDIO_EVENTID_HEADSET_DET, buf, OPLUS_FB_HEADSET_DET_RATELIMIT);
-		}
-	}
-	#endif /* CONFIG_OPLUS_FEATURE_MM_FEEDBACK */
 	pr_debug("%s: leave\n", __func__);
 }
 

@@ -66,7 +66,7 @@ ifdef CONFIG_SND_SOC_WCD937X_SLAVE
 	WCD937X_SLAVE_OBJS += wcd937x_slave.o
 endif
 
-LINUX_INC +=	-Iinclude/linux
+LINUX_INC +=	-I$(srctree)/include/linux
 
 INCS +=		$(COMMON_INC) \
 		$(UAPI_INC)
@@ -83,12 +83,6 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-Wall\
 		-Werror\
 		-D__linux__
-
-#ifdef OPLUS_ARCH_EXTENDS
-ifeq ($(CONFIG_ARCH_SM6150), y)
-CDEFINES += -DDBMDX_SOUND_TRIGGER_SUPPORT
-endif
-#endif /* OPLUS_ARCH_EXTENDS */
 
 KBUILD_CPPFLAGS += $(CDEFINES)
 

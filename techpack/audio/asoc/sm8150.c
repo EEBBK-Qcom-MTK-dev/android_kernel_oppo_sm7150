@@ -3392,11 +3392,6 @@ static const struct snd_soc_dapm_widget msm_dapm_widgets_tavil[] = {
 	SND_SOC_DAPM_MIC("Digital Mic5", NULL),
 };
 
-#ifdef OPLUS_ARCH_EXTENDS
-extern void extend_codec_i2s_be_dailinks(struct snd_soc_dai_link *dailink, size_t size);
-static void (*extend_i2s_be_dailinks_func)(struct snd_soc_dai_link *dailink, size_t size);
-#endif /* OPLUS_ARCH_EXTENDS */
-
 static inline int param_is_mask(int p)
 {
 	return (p >= SNDRV_PCM_HW_PARAM_FIRST_MASK) &&
@@ -6959,31 +6954,6 @@ static struct snd_soc_dai_link msm_auxpcm_be_dai_links[] = {
 	},
 };
 
-#ifdef OPLUS_ARCH_EXTENDS
-#ifdef CONFIG_SND_SOC_MAX98937
-static struct snd_soc_dai_link maxim_fe_dai[] = {
-	{/* hw:x,40 */
-		.name = "Quaternary MI2S_TX Hostless",
-		.stream_name = "Quaternary MI2S_TX Hostless",
-		.cpu_dai_name = "QUAT_MI2S_TX_HOSTLESS",
-		.platform_name	= "msm-pcm-hostless",
-		.dynamic = 1,
-		.dpcm_capture = 1,
-		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
-			SND_SOC_DPCM_TRIGGER_POST},
-		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
-		.ignore_suspend = 1,
-		 /* this dailink has playback support */
-		.ignore_pmdown_time = 1,
-		/* This dainlink has MI2S support */
-		.codec_dai_name = "snd-soc-dummy-dai",
-		.codec_name = "snd-soc-dummy",
-	},
-};
-#endif
-#endif /* OPLUS_ARCH_EXTENDS */
-
-
 static struct snd_soc_dai_link msm_pahu_snd_card_dai_links[
 			 ARRAY_SIZE(msm_common_dai_links) +
 			 ARRAY_SIZE(msm_pahu_fe_dai_links) +
@@ -6995,7 +6965,6 @@ static struct snd_soc_dai_link msm_pahu_snd_card_dai_links[
 			 ARRAY_SIZE(msm_mi2s_be_dai_links) +
 			 ARRAY_SIZE(msm_auxpcm_be_dai_links)];
 
-#ifndef OPLUS_ARCH_EXTENDS
 static struct snd_soc_dai_link msm_tavil_dai_links[
 			 ARRAY_SIZE(msm_common_dai_links) +
 			 ARRAY_SIZE(msm_tavil_fe_dai_links) +
@@ -7006,33 +6975,6 @@ static struct snd_soc_dai_link msm_tavil_dai_links[
 			 ARRAY_SIZE(ext_disp_be_dai_link) +
 			 ARRAY_SIZE(msm_mi2s_be_dai_links) +
 			 ARRAY_SIZE(msm_auxpcm_be_dai_links)];
-#else /* OPLUS_ARCH_EXTENDS */
-#ifdef CONFIG_SND_SOC_MAX98937
-static struct snd_soc_dai_link msm_tavil_dai_links[
-			 ARRAY_SIZE(msm_common_dai_links) +
-			 ARRAY_SIZE(msm_tavil_fe_dai_links) +
-			 ARRAY_SIZE(msm_common_misc_fe_dai_links) +
-			 ARRAY_SIZE(msm_common_be_dai_links) +
-			 ARRAY_SIZE(msm_tavil_be_dai_links) +
-			 ARRAY_SIZE(msm_wcn_be_dai_links) +
-			 ARRAY_SIZE(ext_disp_be_dai_link) +
-			 ARRAY_SIZE(msm_mi2s_be_dai_links) +
-			 ARRAY_SIZE(msm_auxpcm_be_dai_links) +
-			 ARRAY_SIZE(maxim_fe_dai)
-];
-#else
-static struct snd_soc_dai_link msm_tavil_dai_links[
-			 ARRAY_SIZE(msm_common_dai_links) +
-			 ARRAY_SIZE(msm_tavil_fe_dai_links) +
-			 ARRAY_SIZE(msm_common_misc_fe_dai_links) +
-			 ARRAY_SIZE(msm_common_be_dai_links) +
-			 ARRAY_SIZE(msm_tavil_be_dai_links) +
-			 ARRAY_SIZE(msm_wcn_be_dai_links) +
-			 ARRAY_SIZE(ext_disp_be_dai_link) +
-			 ARRAY_SIZE(msm_mi2s_be_dai_links) +
-			 ARRAY_SIZE(msm_auxpcm_be_dai_links)];
-#endif
-#endif /* OPLUS_ARCH_EXTENDS */
 
 static int msm_snd_card_tavil_late_probe(struct snd_soc_card *card)
 {
@@ -7311,10 +7253,6 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 	const struct of_device_id *match;
 	int ret = 0;
 	u32 val = 0;
-	#ifdef OPLUS_ARCH_EXTENDS
-	const char *product_name = NULL;
-	const char *oppo_speaker_type = "oppo,speaker-pa";
-	#endif /* OPLUS_ARCH_EXTENDS */
 
 	match = of_match_node(sm8150_asoc_machine_of_match, dev->of_node);
 	if (!match) {
@@ -7436,12 +7374,6 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 		ret = of_property_read_u32(dev->of_node,
 					   "qcom,mi2s-audio-intf", &val);
 		if (!ret && val) {
-			#ifdef OPLUS_ARCH_EXTENDS
-			extend_i2s_be_dailinks_func = symbol_request(extend_codec_i2s_be_dailinks);
-			if(extend_i2s_be_dailinks_func){
-				extend_i2s_be_dailinks_func(msm_mi2s_be_dai_links, ARRAY_SIZE(msm_mi2s_be_dai_links));
-			}
-			#endif /* OPLUS_ARCH_EXTENDS */
 			memcpy(msm_tavil_dai_links + total_links,
 			       msm_mi2s_be_dai_links,
 			       sizeof(msm_mi2s_be_dai_links));
@@ -7456,18 +7388,6 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 			sizeof(msm_auxpcm_be_dai_links));
 			total_links += ARRAY_SIZE(msm_auxpcm_be_dai_links);
 		}
-		#ifdef OPLUS_ARCH_EXTENDS
-		if (!of_property_read_string(dev->of_node, oppo_speaker_type, &product_name)) {
-			#ifdef CONFIG_SND_SOC_MAX98937
-			if (!strcmp(product_name, "maxim")) {
-				memcpy(msm_tavil_dai_links + total_links,
-					maxim_fe_dai,
-					sizeof(maxim_fe_dai));
-				total_links += ARRAY_SIZE(maxim_fe_dai);
-			}
-			#endif
-		}
-		#endif /* OPLUS_ARCH_EXTENDS */
 		dailink = msm_tavil_dai_links;
 	} else if (!strcmp(match->data, "stub_codec")) {
 		card = &snd_soc_card_stub_msm;
