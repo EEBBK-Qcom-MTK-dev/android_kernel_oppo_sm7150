@@ -57,7 +57,7 @@ jobs:
           export PATH="$GITHUB_WORKSPACE/workdir/clang/bin:$GITHUB_WORKSPACE/workdir/gcc/bin/:$PATH"
 
           cd $GITHUB_WORKSPACE/workdir/source
-          make -j$(nproc --all) O=out CC=clang vendor/sdmsteppe-perf_defconfig
+          make -j$(nproc --all) O=out CC=clang vendor/sm7150-perf_defconfig
           make -j$(nproc --all) O=out CC=clang DTC=dtc 2>&1 | tee kernel.log
 
       - name: Upload logs
