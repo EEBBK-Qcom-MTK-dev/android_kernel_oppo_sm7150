@@ -55,9 +55,10 @@ jobs:
           export CROSS_COMPILE="aarch64-linux-android-"
           export CLANG_TRIPLE="aarch64-linux-gnu-"
           export PATH="$GITHUB_WORKSPACE/workdir/clang/bin:$GITHUB_WORKSPACE/workdir/gcc/bin/:$PATH"
+          export TARGET_PLATFORM=sm6150
 
           cd $GITHUB_WORKSPACE/workdir/source
-          make -j$(nproc --all) O=out CC=clang vendor/sm7150-perf_defconfig
+          make -j$(nproc --all) O=out CC=clang vendor/sdmsteppe-perf_defconfig vendor/debugfs.config
           make -j$(nproc --all) O=out CC=clang DTC=dtc 2>&1 | tee kernel.log
 
       - name: Upload logs
