@@ -102,7 +102,7 @@ static void inotify_fdinfo(struct seq_file *m, struct fsnotify_mark *mark)
 		return;
 
 	inode_mark = container_of(mark, struct inotify_inode_mark, fsn_mark);
-	inode = igrab(mark->connector->inode);
+	inode = igrab(mark->inode);
 	if (inode) {
 		/*
 		 * IN_ALL_EVENTS represents all of the mask bits

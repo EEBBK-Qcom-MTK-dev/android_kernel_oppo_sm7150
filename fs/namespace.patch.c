@@ -141,9 +141,19 @@ static void mnt_free_id(struct mount *mnt)
 	int id = mnt->mnt_id;
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-	if (mnt->mnt.mnt_flags & VFSMOUNT_MNT_FLAGS_KSU_UNSHARED_MNT)
+	if (id >= DEFAULT_KSU_MNT_ID) {
+		spin_lock(&mnt_id_lock);
+		ida_remove(&susfs_mnt_id_ida, id);
+		if (mnt_id_start > id)
+			mnt_id_start = id;
+		spin_unlock(&mnt_id_lock);
 		return;
-
+	}
+ 
+	if (mnt->mnt.mnt_flags & VFSMOUNT_MNT_FLAGS_KSU_UNSHARED_MNT) {
+		return;
+	}
+ 
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 
 	spin_lock(&mnt_id_lock);
@@ -198,7 +208,17 @@ bypass_orig_flow:
 void mnt_release_group_id(struct mount *mnt)
 {
 	int id = mnt->mnt_group_id;
-
+ 
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+	if (id >= DEFAULT_KSU_MNT_GROUP_ID) {
+		ida_remove(&susfs_mnt_group_ida, id);
+		if (mnt_group_start > id)
+			mnt_group_start = id;
+		mnt->mnt_group_id = 0;
+		return;
+	}
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+ 
 	ida_remove(&mnt_group_ida, id);
 	if (mnt_group_start > id)
 		mnt_group_start = id;
