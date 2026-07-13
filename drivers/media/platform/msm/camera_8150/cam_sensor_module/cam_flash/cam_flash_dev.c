@@ -12,20 +12,20 @@
  */
 
 #include <linux/module.h>
-#ifdef VENDOR_EDIT
+//#ifdef VENDOR_EDIT
 #include <linux/proc_fs.h>
 #include <linux/time.h>
 #include <linux/rtc.h>
 struct cam_flash_ctrl *vendor_flash_ctrl = NULL;
 struct cam_flash_ctrl *front_flash_ctrl = NULL;
-#endif
+//#endif
 #include "cam_flash_dev.h"
 #include "cam_flash_soc.h"
 #include "cam_flash_core.h"
 #include "cam_common_util.h"
-#ifdef VENDOR_EDIT
+//#ifdef VENDOR_EDIT
 #include "cam_res_mgr_api.h"
-#endif
+//#endif
 
 static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		void *arg, struct cam_flash_private_soc *soc_private)
@@ -216,7 +216,7 @@ release_mutex:
 	return rc;
 }
 
-#ifdef VENDOR_EDIT
+//#ifdef VENDOR_EDIT
 volatile static int flash_mode;
 volatile static int pre_flash_mode;
 static ssize_t flash_on_off(struct cam_flash_ctrl *flash_ctrl)
@@ -359,7 +359,7 @@ static ssize_t cam_flash_switch_show(struct device *dev,
 }
 
 static DEVICE_ATTR(fswitch, 0660, cam_flash_switch_show,cam_flash_switch_store);
-#endif
+//#endif
 
 static int32_t cam_flash_init_default_params(struct cam_flash_ctrl *fctrl)
 {
@@ -656,11 +656,11 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 	mutex_init(&(fctrl->flash_mutex));
 
 	fctrl->flash_state = CAM_FLASH_STATE_INIT;
-	#ifdef VENDOR_EDIT
+	//#ifdef VENDOR_EDIT
 	if (flash_proc_init(fctrl) < 0) {
 		device_create_file(&pdev->dev, &dev_attr_fswitch);
 	}
-	#endif
+	//#endif
 	CAM_DBG(CAM_FLASH, "Probe success");
 	return rc;
 
