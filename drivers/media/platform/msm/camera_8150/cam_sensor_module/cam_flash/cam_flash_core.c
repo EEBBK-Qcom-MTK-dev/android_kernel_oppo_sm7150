@@ -543,7 +543,7 @@ static int cam_flash_high(
 	return rc;
 }
 
-#ifdef VENDOR_EDIT
+//#ifdef VENDOR_EDIT
 int cam_flash_on(struct cam_flash_ctrl *flash_ctrl,
 	struct cam_flash_frame_setting *flash_data,
 	int mode) {
@@ -555,7 +555,7 @@ int cam_flash_on(struct cam_flash_ctrl *flash_ctrl,
 	}
 	return rc;
 }
-#endif
+//#endif
 static int cam_flash_i2c_delete_req(struct cam_flash_ctrl *fctrl,
 	uint64_t req_id)
 {
