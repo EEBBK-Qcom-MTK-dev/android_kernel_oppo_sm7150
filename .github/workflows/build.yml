@@ -55,7 +55,7 @@ jobs:
           export CROSS_COMPILE="aarch64-linux-android-"
           export CLANG_TRIPLE="aarch64-linux-gnu-"
           export PATH="$GITHUB_WORKSPACE/workdir/clang/bin:$GITHUB_WORKSPACE/workdir/gcc/bin/:$PATH"
-          export TARGET_PLATFORM=sm6150
+          export TARGET_PRODUCT=sm6150
 
           cd $GITHUB_WORKSPACE/workdir/source
           make -j$(nproc --all) O=out CC=clang vendor/sdmsteppe-perf_defconfig vendor/debugfs.config
