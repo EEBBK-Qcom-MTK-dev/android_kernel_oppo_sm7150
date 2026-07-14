@@ -58,7 +58,7 @@ jobs:
           export TARGET_PRODUCT=sm6150
 
           cd $GITHUB_WORKSPACE/workdir/source
-          make -j$(nproc --all) O=out CC=clang vendor/sdmsteppe-perf_defconfig vendor/debugfs.config droidspaces-additional.config droidspaces.config
+          make -j$(nproc --all) O=out CC=clang vendor/sdmsteppe-perf_defconfig vendor/debugfs.config droidian/droidian.config droidian/halium.config droidian/container.config droidian/k5_droidian.config
           make -j$(nproc --all) O=out CC=clang DTC=dtc 2>&1 | tee kernel.log
 
       - name: Upload logs
